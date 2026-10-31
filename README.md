@@ -7,14 +7,16 @@ A fast, minimalist TUI garbage collection and system maintenance helper for **Ni
 ```text
 ┌─ rensa v0.1.0 ────────────────────────────────────────── [ NixOS Garbage Collection Helper ] ─┐
 │                                                                                               │
-│  [ x ] NixOS System Generations       17 to purge (keeping last 3)       [root] [  14.11 GiB ]│
-│  [ x ] User Profile Generations       2 old profile generation(s)               [ 400.00 MiB ]│
-│  [ x ] Dead GC Roots & Result Links   1 dead root(s), 1 result link(s)   [root] [   1.00 GiB ]│
-│  [ x ] Unreferenced Nix Store Paths   142 unreferenced store path(s)            [ 426.00 MiB ]│
-│  [ x ] Systemd Journal Logs           Current: 1.9 GiB (vacuum to 100M)  [root] [   1.80 GiB ]│
-│  [ x ] User Application & Eval Cache  Nix eval cache & thumbnails               [ 508.00 MiB ]│
-│  [ x ] User Trash                     23 item(s) in ~/.local/share/Trash        [ 227.00 MiB ]│
-│  [   ] Nix Store Deduplication        Hardlink identical store objects   [root] [          - ]│
+│   STATUS  TARGET                       DETAILS                            SCOPE     EST. SIZE │
+│                                                                                               │
+│ >  [ x ]  NixOS System Generations     17 to purge (keeping last 3)       [root] [  14.11 GiB ]│
+│    [ x ]  User Profile Generations     2 old profile generation(s)        [user] [ 400.00 MiB ]│
+│    [ x ]  Dead GC Roots & Result Links 1 dead root(s), 1 result link(s)   [root] [   1.00 GiB ]│
+│    [ x ]  Unreferenced Nix Store Paths 142 unreferenced store path(s)     [user] [ 426.00 MiB ]│
+│    [ x ]  Systemd Journal Logs         Current: 1.9 GiB (vacuum to 100M)  [root] [   1.80 GiB ]│
+│    [ x ]  User Application & Cache     Nix eval cache & thumbnails        [user] [ 508.00 MiB ]│
+│    [ x ]  User Trash                   23 item(s) in ~/.local/share/Trash [user] [ 227.00 MiB ]│
+│    [   ]  Nix Store Deduplication      Hardlink identical store objects   [root] [          - ]│
 │                                                                                               │
 ├───────────────────────────────────────────────────────────────────────────────────────────────┤
 │  Total selected to purge: 18.47 GiB      [Enter] Rensa skräp                                  │
