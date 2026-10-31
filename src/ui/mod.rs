@@ -228,13 +228,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         ])
         .split(area);
 
-    // 1. Header
-    let title_status = if app.mode == AppMode::Done {
-        "Purge Complete"
-    } else {
-        "Purging Selected Targets..."
-    };
-
+    // 1. Header (Identical to main view for rock-solid visual consistency)
     let header_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -251,16 +245,10 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         ])
         .split(inner);
 
-    let left = Paragraph::new(Line::from(vec![
-        Span::styled(" Rensa ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::raw("· "),
-        Span::styled(
-            title_status,
-            Style::default()
-                .fg(if app.mode == AppMode::Done { Color::Green } else { Color::Yellow })
-                .add_modifier(Modifier::BOLD),
-        ),
-    ]));
+    let left = Paragraph::new(Span::styled(
+        " Rensa",
+        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+    ));
     f.render_widget(left, header_layout[0]);
 
     let right = Paragraph::new(Span::styled(
@@ -372,7 +360,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     let logs_widget = Paragraph::new(log_lines).block(logs_block);
     f.render_widget(logs_widget, chunks[2]);
 
-    // 4. Status block (Balanced: Left info, Right action button)
+    // 4. Status block (Balanced: Left info, Right status badge)
     let status_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -385,13 +373,13 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Min(20),    // Left info
-            Constraint::Length(26), // Right action button
+            Constraint::Length(25), // Right status badge
         ])
         .split(inner);
 
     if app.mode == AppMode::Done {
         let left_info = Line::from(vec![
-            Span::styled(" Successfully freed: ", Style::default().fg(Color::White)),
+            Span::raw(" Successfully freed: "),
             Span::styled(
                 format_bytes(app.total_freed_bytes),
                 Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
@@ -399,9 +387,9 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         ]);
         f.render_widget(Paragraph::new(left_info), status_layout[0]);
 
-        let right_btn = Paragraph::new(Line::from(vec![
+        let right_badge = Paragraph::new(Line::from(vec![
             Span::styled(
-                " Back to menu [Enter] ",
+                " Purge complete ",
                 Style::default()
                     .bg(Color::Rgb(40, 80, 60))
                     .fg(Color::White)
@@ -410,39 +398,39 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
             Span::raw(" "),
         ]))
         .alignment(Alignment::Right);
-        f.render_widget(right_btn, status_layout[1]);
+        f.render_widget(right_badge, status_layout[1]);
     } else {
         let left_info = Line::from(vec![
             Span::styled(" Running cleanup: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::styled("executing selected targets...", Style::default().fg(Color::Gray)),
+            Span::styled("executing selected targets...", Style::default().fg(Color::DarkGray)),
         ]);
         f.render_widget(Paragraph::new(left_info), status_layout[0]);
 
-        let right_btn = Paragraph::new(Line::from(vec![
+        let right_badge = Paragraph::new(Line::from(vec![
             Span::styled(
-                " Abort [Ctrl+C] ",
+                " Purging... ",
                 Style::default()
-                    .bg(Color::Rgb(80, 40, 40))
+                    .bg(Color::Rgb(70, 60, 25))
                     .fg(Color::White)
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw(" "),
         ]))
         .alignment(Alignment::Right);
-        f.render_widget(right_btn, status_layout[1]);
+        f.render_widget(right_badge, status_layout[1]);
     }
 
     // 5. Keybinds outside borders, centered
     let keybinds_line = if app.mode == AppMode::Done {
         Line::from(vec![
-            Span::styled("Enter / Esc", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled("enter / esc", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::styled(" return to menu   ·   ", Style::default().fg(Color::DarkGray)),
             Span::styled("q", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::styled(" quit", Style::default().fg(Color::DarkGray)),
         ])
     } else {
         Line::from(vec![
-            Span::styled("Ctrl+C", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled("ctrl+c", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::styled(" abort cleanup process", Style::default().fg(Color::DarkGray)),
         ])
     };
