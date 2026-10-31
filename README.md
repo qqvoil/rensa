@@ -20,10 +20,10 @@ A fast, minimalist TUI garbage collection and system maintenance helper for **Ni
 │    [ x ]  User Trash                   23 item(s) in ~/.local/share/Trash [user] [ 227.00 MiB ]│
 │    [   ]  Nix Store Deduplication      Hardlink identical store objects   [root] [          - ]│
 │                                                                                               │
-├───────────────────────────────────────────────────────────────────────────────────────────────┤
-│  Total selected to purge: 18.47 GiB      Rensa skräp [Enter]                                  │
-│  [Space] Toggle   [a] All   [j/k / ↑/↓] Navigate   [r] Rescan   [q] Quit                      │
+┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+│  Total selected to purge: 18.47 GiB                                       Rensa skräp [Enter] │
 └───────────────────────────────────────────────────────────────────────────────────────────────┘
+              space toggle   ·   a all   ·   j/k navigate   ·   r rescan   ·   q quit
 ```
 
 ---

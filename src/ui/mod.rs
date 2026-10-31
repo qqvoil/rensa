@@ -25,8 +25,9 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Header
-            Constraint::Min(10),   // Table of targets
-            Constraint::Length(4), // Footer / Action
+            Constraint::Min(8),    // Table of targets
+            Constraint::Length(3), // Footer / Action
+            Constraint::Length(1), // Keybinds (outside borders, centered)
         ])
         .split(area);
 
@@ -162,42 +163,57 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(table, chunks[1]);
 
     // 3. Footer / Action bar
-    let footer_block = Block::default()
+    let action_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::DarkGray));
 
-    let total_str = format_bytes(app.total_selected_bytes());
-    let action_str = " Rensa skräp [Enter] ";
+    let inner = action_block.inner(chunks[2]);
+    f.render_widget(action_block, chunks[2]);
 
-    let row1 = Line::from(vec![
-        Span::raw("  Total selected to purge: "),
+    let action_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(20),    // Left: Total selected
+            Constraint::Length(25), // Right: Action button
+        ])
+        .split(inner);
+
+    let total_str = format_bytes(app.total_selected_bytes());
+    let total_line = Line::from(vec![
+        Span::raw(" Total selected to purge: "),
         Span::styled(total_str, Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-        Span::raw("    "),
+    ]);
+    f.render_widget(Paragraph::new(total_line), action_layout[0]);
+
+    let action_btn = Paragraph::new(Line::from(vec![
         Span::styled(
-            action_str,
+            " Rensa skräp [Enter] ",
             Style::default()
                 .bg(Color::Rgb(40, 80, 60))
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
         ),
-    ]);
+        Span::raw(" "),
+    ]))
+    .alignment(Alignment::Right);
+    f.render_widget(action_btn, action_layout[1]);
 
-    let row2 = Line::from(vec![
-        Span::styled("  [Space]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled(" Toggle   ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[a]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled(" All   ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[j/k / ↑/↓]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled(" Navigate   ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[r]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled(" Rescan   ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[q]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled(" Quit", Style::default().fg(Color::DarkGray)),
+    // 4. Keybinds outside borders, centered
+    let keybinds_line = Line::from(vec![
+        Span::styled("space", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" toggle   ·   ", Style::default().fg(Color::DarkGray)),
+        Span::styled("a", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" all   ·   ", Style::default().fg(Color::DarkGray)),
+        Span::styled("j/k", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" navigate   ·   ", Style::default().fg(Color::DarkGray)),
+        Span::styled("r", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" rescan   ·   ", Style::default().fg(Color::DarkGray)),
+        Span::styled("q", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" quit", Style::default().fg(Color::DarkGray)),
     ]);
-
-    let footer = Paragraph::new(vec![row1, row2]).block(footer_block);
-    f.render_widget(footer, chunks[2]);
+    let keybinds = Paragraph::new(keybinds_line).alignment(Alignment::Center);
+    f.render_widget(keybinds, chunks[3]);
 }
 
 fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
@@ -207,7 +223,8 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(3), // Header
             Constraint::Length(10), // Steps table
             Constraint::Min(6),    // Logs
-            Constraint::Length(3), // Footer
+            Constraint::Length(3), // Status block
+            Constraint::Length(1), // Keybinds (outside borders, centered)
         ])
         .split(area);
 
@@ -335,34 +352,47 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     let logs_widget = Paragraph::new(log_lines).block(logs_block);
     f.render_widget(logs_widget, chunks[2]);
 
-    // 4. Footer
-    let footer_block = Block::default()
+    // 4. Status block
+    let status_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::DarkGray));
 
-    let footer_text = if app.mode == AppMode::Done {
+    let inner = status_block.inner(chunks[3]);
+    f.render_widget(status_block, chunks[3]);
+
+    let status_text = if app.mode == AppMode::Done {
         Line::from(vec![
-            Span::styled("  Done! ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(" Done! ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
             Span::raw("Freed approx "),
             Span::styled(
                 format_bytes(app.total_freed_bytes),
                 Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
             ),
-            Span::raw(".  Press "),
-            Span::styled("[Enter / Esc]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Span::raw(" to return to menu, "),
-            Span::styled("[q]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Span::raw(" to quit."),
+            Span::raw(" of disk space."),
         ])
     } else {
         Line::from(vec![
-            Span::raw("  Working... Press "),
-            Span::styled("[Ctrl+C]", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Span::raw(" to abort."),
+            Span::styled(" Working... ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::raw("Executing selected cleanup tasks."),
         ])
     };
+    f.render_widget(Paragraph::new(status_text), inner);
 
-    let footer = Paragraph::new(footer_text).block(footer_block);
-    f.render_widget(footer, chunks[3]);
+    // 5. Keybinds outside borders, centered
+    let keybinds_line = if app.mode == AppMode::Done {
+        Line::from(vec![
+            Span::styled("Enter / Esc", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled(" return to menu   ·   ", Style::default().fg(Color::DarkGray)),
+            Span::styled("q", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled(" quit", Style::default().fg(Color::DarkGray)),
+        ])
+    } else {
+        Line::from(vec![
+            Span::styled("Ctrl+C", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Span::styled(" abort", Style::default().fg(Color::DarkGray)),
+        ])
+    };
+    let keybinds = Paragraph::new(keybinds_line).alignment(Alignment::Center);
+    f.render_widget(keybinds, chunks[4]);
 }
