@@ -389,7 +389,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
 
         let right_badge = Paragraph::new(Line::from(vec![
             Span::styled(
-                " Purge complete ",
+                " Rensning klar ",
                 Style::default()
                     .bg(Color::Rgb(40, 80, 60))
                     .fg(Color::White)
@@ -408,7 +408,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
 
         let right_badge = Paragraph::new(Line::from(vec![
             Span::styled(
-                " Purging... ",
+                " Rensar... ",
                 Style::default()
                     .bg(Color::Rgb(70, 60, 25))
                     .fg(Color::White)
