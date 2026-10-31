@@ -55,7 +55,7 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(left, header_layout[0]);
 
     let right = Paragraph::new(Span::styled(
-        "v0.1.0 ",
+        "v0.2.0 ",
         Style::default().fg(Color::DarkGray),
     ))
     .alignment(Alignment::Right);
@@ -252,7 +252,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(left, header_layout[0]);
 
     let right = Paragraph::new(Span::styled(
-        "v0.1.0 ",
+        "v0.2.0 ",
         Style::default().fg(Color::DarkGray),
     ))
     .alignment(Alignment::Right);
