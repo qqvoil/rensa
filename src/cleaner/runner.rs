@@ -15,6 +15,7 @@ pub fn run_clean(selected_ids: Vec<String>, tx: Sender<CleanEvent>) {
         let mut success_count = 0;
 
         for id in &selected_ids {
+            std::thread::sleep(std::time::Duration::from_millis(350));
             match id.as_str() {
                 "system_generations" => {
                     let title = "Pruning NixOS System Generations".to_string();
@@ -256,9 +257,17 @@ fn clean_trash(tx: &Sender<CleanEvent>) {
         for sub in &["files", "info"] {
             let p = trash_dir.join(sub);
             if p.exists() {
-                let _ = tx.send(CleanEvent::LogLine(format!("Cleaning trash subfolder: {:?}", p)));
-                let _ = fs::remove_dir_all(&p);
-                let _ = fs::create_dir_all(&p);
+                if let Ok(entries) = fs::read_dir(&p) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        let _ = tx.send(CleanEvent::LogLine(format!("Purging trash item: {:?}", path.file_name().unwrap_or_default())));
+                        let _ = if path.is_dir() {
+                            fs::remove_dir_all(&path)
+                        } else {
+                            fs::remove_file(&path)
+                        };
+                    }
+                }
             }
         }
     }
