@@ -270,7 +270,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     .alignment(Alignment::Right);
     f.render_widget(right, header_layout[1]);
 
-    // 2. Steps summary (Table layout)
+    // 2. Steps summary (Table layout with matching columns)
     let steps_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -316,16 +316,27 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         step_rows.push(step_row);
     }
 
+    let header_row = Row::new(vec![
+        Cell::from(Span::styled("  STATUS", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled("TARGET", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD))),
+        Cell::from(Span::styled("PROGRESS / RESULT", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD))),
+    ])
+    .style(Style::default().fg(Color::DarkGray))
+    .bottom_margin(1);
+
+    // Column widths match the main targets table exactly!
     let step_widths = [
-        Constraint::Length(8),
-        Constraint::Length(32),
-        Constraint::Min(30),
+        Constraint::Length(8),  // Status icon: [ ✓ ] / [ ⠋ ]
+        Constraint::Length(32), // Target title
+        Constraint::Min(30),    // Details / message
     ];
 
-    let steps_table = Table::new(step_rows, step_widths).block(steps_block);
+    let steps_table = Table::new(step_rows, step_widths)
+        .header(header_row)
+        .block(steps_block);
     f.render_widget(steps_table, chunks[1]);
 
-    // 3. Execution Log stream
+    // 3. Execution Log stream with clean left margin
     let logs_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -340,11 +351,20 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         .rev()
         .map(|l| {
             if l.starts_with('$') {
-                Line::from(Span::styled(l, Style::default().fg(Color::Cyan)))
+                Line::from(vec![
+                    Span::raw("  "),
+                    Span::styled(l, Style::default().fg(Color::Cyan)),
+                ])
             } else if l.to_lowercase().contains("error") {
-                Line::from(Span::styled(l, Style::default().fg(Color::Red)))
+                Line::from(vec![
+                    Span::raw("  "),
+                    Span::styled(l, Style::default().fg(Color::Red)),
+                ])
             } else {
-                Line::from(Span::styled(l, Style::default().fg(Color::DarkGray)))
+                Line::from(vec![
+                    Span::raw("  "),
+                    Span::styled(l, Style::default().fg(Color::DarkGray)),
+                ])
             }
         })
         .collect();
@@ -352,7 +372,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     let logs_widget = Paragraph::new(log_lines).block(logs_block);
     f.render_widget(logs_widget, chunks[2]);
 
-    // 4. Status block
+    // 4. Status block (Balanced: Left info, Right action button)
     let status_block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
@@ -361,23 +381,56 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     let inner = status_block.inner(chunks[3]);
     f.render_widget(status_block, chunks[3]);
 
-    let status_text = if app.mode == AppMode::Done {
-        Line::from(vec![
-            Span::styled(" Done! ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-            Span::raw("Freed approx "),
+    let status_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(20),    // Left info
+            Constraint::Length(26), // Right action button
+        ])
+        .split(inner);
+
+    if app.mode == AppMode::Done {
+        let left_info = Line::from(vec![
+            Span::styled(" Successfully freed: ", Style::default().fg(Color::White)),
             Span::styled(
                 format_bytes(app.total_freed_bytes),
-                Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
             ),
-            Span::raw(" of disk space."),
-        ])
+        ]);
+        f.render_widget(Paragraph::new(left_info), status_layout[0]);
+
+        let right_btn = Paragraph::new(Line::from(vec![
+            Span::styled(
+                " Back to menu [Enter] ",
+                Style::default()
+                    .bg(Color::Rgb(40, 80, 60))
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" "),
+        ]))
+        .alignment(Alignment::Right);
+        f.render_widget(right_btn, status_layout[1]);
     } else {
-        Line::from(vec![
-            Span::styled(" Working... ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::raw("Executing selected cleanup tasks."),
-        ])
-    };
-    f.render_widget(Paragraph::new(status_text), inner);
+        let left_info = Line::from(vec![
+            Span::styled(" Running cleanup: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled("executing selected targets...", Style::default().fg(Color::Gray)),
+        ]);
+        f.render_widget(Paragraph::new(left_info), status_layout[0]);
+
+        let right_btn = Paragraph::new(Line::from(vec![
+            Span::styled(
+                " Abort [Ctrl+C] ",
+                Style::default()
+                    .bg(Color::Rgb(80, 40, 40))
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" "),
+        ]))
+        .alignment(Alignment::Right);
+        f.render_widget(right_btn, status_layout[1]);
+    }
 
     // 5. Keybinds outside borders, centered
     let keybinds_line = if app.mode == AppMode::Done {
@@ -390,7 +443,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
     } else {
         Line::from(vec![
             Span::styled("Ctrl+C", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Span::styled(" abort", Style::default().fg(Color::DarkGray)),
+            Span::styled(" abort cleanup process", Style::default().fg(Color::DarkGray)),
         ])
     };
     let keybinds = Paragraph::new(keybinds_line).alignment(Alignment::Center);
