@@ -156,7 +156,7 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
         .border_style(Style::default().fg(Color::DarkGray));
 
     let total_str = format_bytes(app.total_selected_bytes());
-    let action_str = " [Enter] Rensa skräp ";
+    let action_str = " Rensa skräp [Enter] ";
 
     let row1 = Line::from(vec![
         Span::raw("  Total selected to purge: "),

@@ -19,7 +19,7 @@ A fast, minimalist TUI garbage collection and system maintenance helper for **Ni
 │    [   ]  Nix Store Deduplication      Hardlink identical store objects   [root] [          - ]│
 │                                                                                               │
 ├───────────────────────────────────────────────────────────────────────────────────────────────┤
-│  Total selected to purge: 18.47 GiB      [Enter] Rensa skräp                                  │
+│  Total selected to purge: 18.47 GiB      Rensa skräp [Enter]                                  │
 │  [Space] Toggle   [a] All   [j/k / ↑/↓] Navigate   [r] Rescan   [q] Quit                      │
 └───────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
