@@ -1,20 +1,44 @@
 use std::fs;
 use std::path::PathBuf;
-use super::ScanResult;
+use super::{get_target_homes, ScanResult};
+
+pub fn get_user_profile_dirs() -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    for home in get_target_homes() {
+        let p = home.join(".local/state/nix/profiles");
+        if p.exists() && !dirs.contains(&p) {
+            dirs.push(p);
+        }
+    }
+    if let Ok(entries) = fs::read_dir("/nix/var/nix/profiles/per-user") {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() && !dirs.contains(&p) {
+                dirs.push(p);
+            }
+        }
+    }
+    dirs
+}
+
+pub fn get_user_profile_links() -> Vec<PathBuf> {
+    let mut links = Vec::new();
+    for dir in get_user_profile_dirs() {
+        let link = dir.join("profile");
+        if link.exists() || link.is_symlink() {
+            if !links.contains(&link) {
+                links.push(link);
+            }
+        }
+    }
+    links
+}
 
 pub fn scan() -> ScanResult {
     let mut to_delete = 0;
     let mut estimated_bytes = 0;
 
-    let mut profile_dirs = Vec::new();
-    if let Ok(home) = std::env::var("HOME") {
-        profile_dirs.push(PathBuf::from(&home).join(".local/state/nix/profiles"));
-    }
-    if let Ok(user) = std::env::var("USER") {
-        profile_dirs.push(PathBuf::from("/nix/var/nix/profiles/per-user").join(user));
-    }
-
-    for dir in profile_dirs {
+    for dir in get_user_profile_dirs() {
         if let Ok(entries) = fs::read_dir(&dir) {
             let mut gens: Vec<u32> = Vec::new();
             for entry in entries.flatten() {

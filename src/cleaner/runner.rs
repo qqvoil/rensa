@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::mpsc::Sender;
 use super::CleanEvent;
@@ -44,8 +44,22 @@ pub fn run_clean(selected_ids: Vec<String>, tx: Sender<CleanEvent>) {
                 "user_generations" => {
                     let title = "Cleaning User Profile Generations".to_string();
                     let _ = tx.send(CleanEvent::StepStart { id: id.clone(), title });
-                    let ok = run_cmd(&tx, false, "nix-env", &["--delete-generations", "old"]);
-                    if ok {
+                    let profiles = crate::scanner::user_gens::get_user_profile_links();
+                    let mut all_ok = true;
+                    if profiles.is_empty() {
+                        let ok = run_cmd(&tx, false, "nix-env", &["--delete-generations", "old"]);
+                        all_ok = ok;
+                    } else {
+                        for prof in profiles {
+                            let prof_str = prof.to_string_lossy();
+                            let _ = tx.send(CleanEvent::LogLine(format!("Pruning profile: {}", prof_str)));
+                            let ok = run_cmd(&tx, false, "nix-env", &["-p", &prof_str, "--delete-generations", "old"]);
+                            if !ok {
+                                all_ok = false;
+                            }
+                        }
+                    }
+                    if all_ok {
                         success_count += 1;
                         let _ = tx.send(CleanEvent::StepDone {
                             id: id.clone(),
@@ -220,10 +234,9 @@ fn clean_gcroots(tx: &Sender<CleanEvent>) {
         }
     }
 
-    // 2. Delete result symlinks in user's home
-    if let Ok(home) = std::env::var("HOME") {
-        let home_path = PathBuf::from(home);
-        if let Ok(entries) = fs::read_dir(&home_path) {
+    // 2. Delete result symlinks in user homes
+    for home in crate::scanner::get_target_homes() {
+        if let Ok(entries) = fs::read_dir(&home) {
             for entry in entries.flatten() {
                 let p = entry.path();
                 let name = entry.file_name();
@@ -238,10 +251,9 @@ fn clean_gcroots(tx: &Sender<CleanEvent>) {
 }
 
 fn clean_cache(tx: &Sender<CleanEvent>) {
-    if let Ok(home) = std::env::var("HOME") {
-        let home_p = PathBuf::from(home);
+    for home in crate::scanner::get_target_homes() {
         for sub in &[".cache/thumbnails", ".cache/nix"] {
-            let p = home_p.join(sub);
+            let p = home.join(sub);
             if p.exists() {
                 let _ = tx.send(CleanEvent::LogLine(format!("Purging cache dir: {:?}", p)));
                 let _ = fs::remove_dir_all(&p);
@@ -252,8 +264,8 @@ fn clean_cache(tx: &Sender<CleanEvent>) {
 }
 
 fn clean_trash(tx: &Sender<CleanEvent>) {
-    if let Ok(home) = std::env::var("HOME") {
-        let trash_dir = PathBuf::from(home).join(".local/share/Trash");
+    for home in crate::scanner::get_target_homes() {
+        let trash_dir = home.join(".local/share/Trash");
         for sub in &["files", "info"] {
             let p = trash_dir.join(sub);
             if p.exists() {

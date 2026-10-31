@@ -36,3 +36,45 @@ pub fn format_bytes(bytes: u64) -> String {
         format!("{} B", bytes)
     }
 }
+
+pub fn get_target_homes() -> Vec<std::path::PathBuf> {
+    use std::path::PathBuf;
+    let mut homes = Vec::new();
+
+    // 1. If invoked via sudo, detect the invoking user's home
+    if let Ok(sudo_user) = std::env::var("SUDO_USER") {
+        if sudo_user != "root" {
+            if let Ok(sudo_home) = std::env::var("SUDO_HOME") {
+                let p = PathBuf::from(sudo_home);
+                if p.exists() && !homes.contains(&p) {
+                    homes.push(p);
+                }
+            } else {
+                let p = PathBuf::from(format!("/home/{}", sudo_user));
+                if p.exists() && !homes.contains(&p) {
+                    homes.push(p);
+                }
+            }
+        }
+    }
+
+    // 2. Add current process $HOME
+    if let Ok(home) = std::env::var("HOME") {
+        let p = PathBuf::from(home);
+        if p.exists() && !homes.contains(&p) {
+            homes.push(p);
+        }
+    }
+
+    // 3. Fallback: discover any user directories in /home
+    if let Ok(entries) = std::fs::read_dir("/home") {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() && !homes.contains(&p) {
+                homes.push(p);
+            }
+        }
+    }
+
+    homes
+}

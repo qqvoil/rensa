@@ -1,15 +1,13 @@
-use std::path::PathBuf;
 use walkdir::WalkDir;
-use super::ScanResult;
+use super::{get_target_homes, ScanResult};
 
 pub fn scan() -> ScanResult {
     let mut total_bytes = 0u64;
     let mut targets = Vec::new();
 
-    if let Ok(home) = std::env::var("HOME") {
-        let home_p = PathBuf::from(home);
-        targets.push(home_p.join(".cache/thumbnails"));
-        targets.push(home_p.join(".cache/nix"));
+    for home in get_target_homes() {
+        targets.push(home.join(".cache/thumbnails"));
+        targets.push(home.join(".cache/nix"));
     }
 
     for dir in &targets {

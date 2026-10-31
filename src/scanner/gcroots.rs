@@ -1,6 +1,6 @@
 use std::fs;
-use std::path::{Path, PathBuf};
-use super::ScanResult;
+use std::path::Path;
+use super::{get_target_homes, ScanResult};
 
 pub fn scan() -> ScanResult {
     let mut dead_roots = 0;
@@ -20,10 +20,9 @@ pub fn scan() -> ScanResult {
         }
     }
 
-    // 2. Check for result symlinks in user's home directory
-    if let Ok(home) = std::env::var("HOME") {
-        let home_path = PathBuf::from(home);
-        if let Ok(entries) = fs::read_dir(&home_path) {
+    // 2. Check for result symlinks across target user home directories
+    for home in get_target_homes() {
+        if let Ok(entries) = fs::read_dir(&home) {
             for entry in entries.flatten() {
                 let path = entry.path();
                 let name = entry.file_name();
