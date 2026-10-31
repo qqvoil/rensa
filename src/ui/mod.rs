@@ -48,7 +48,7 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
         .split(inner);
 
     let left = Paragraph::new(Span::styled(
-        " rensa",
+        " Rensa",
         Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
     ));
     f.render_widget(left, header_layout[0]);
@@ -235,7 +235,7 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         .split(inner);
 
     let left = Paragraph::new(Line::from(vec![
-        Span::styled(" rensa ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+        Span::styled(" Rensa ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
         Span::raw("· "),
         Span::styled(
             title_status,
