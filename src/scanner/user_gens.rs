@@ -12,6 +12,11 @@ pub fn get_user_profile_dirs() -> Vec<PathBuf> {
     }
     if let Ok(entries) = fs::read_dir("/nix/var/nix/profiles/per-user") {
         for entry in entries.flatten() {
+            let name = entry.file_name();
+            // Root profile is covered under system-level operations, not user profile generations
+            if name == "root" {
+                continue;
+            }
             let p = entry.path();
             if p.is_dir() && !dirs.contains(&p) {
                 dirs.push(p);

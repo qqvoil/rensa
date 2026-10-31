@@ -199,6 +199,16 @@ fn run_cmd(tx: &Sender<CleanEvent>, needs_root: bool, prog: &str, args: &[&str])
         }
     };
 
+    let err_tx = tx.clone();
+    let err_handle = child.stderr.take().map(|stderr| {
+        std::thread::spawn(move || {
+            let reader = BufReader::new(stderr);
+            for line in reader.lines().flatten() {
+                let _ = err_tx.send(CleanEvent::LogLine(line));
+            }
+        })
+    });
+
     if let Some(stdout) = child.stdout.take() {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() {
@@ -206,11 +216,8 @@ fn run_cmd(tx: &Sender<CleanEvent>, needs_root: bool, prog: &str, args: &[&str])
         }
     }
 
-    if let Some(stderr) = child.stderr.take() {
-        let reader = BufReader::new(stderr);
-        for line in reader.lines().flatten() {
-            let _ = tx.send(CleanEvent::LogLine(line));
-        }
+    if let Some(handle) = err_handle {
+        let _ = handle.join();
     }
 
     match child.wait() {
