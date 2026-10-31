@@ -5,8 +5,10 @@
 A fast, minimalist TUI garbage collection and system maintenance helper for **NixOS**, written in Rust.
 
 ```text
-┌─ rensa v0.1.0 ────────────────────────────────────────── [ NixOS Garbage Collection Helper ] ─┐
-│                                                                                               │
+┌───────────────────────────────────────────────────────────────────────────────────────────────┐
+│  rensa                                                                                 v0.1.0 │
+└───────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ Targets ─────────────────────────────────────────────────────────────────────────────────────┐
 │   STATUS  TARGET                       DETAILS                            SCOPE     EST. SIZE │
 │                                                                                               │
 │ >  [ x ]  NixOS System Generations     17 to purge (keeping last 3)       [root] [  14.11 GiB ]│

@@ -36,17 +36,29 @@ fn draw_select_view(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::DarkGray));
 
-    let header_text = Line::from(vec![
-        Span::styled(" rensa ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-        Span::styled("v0.1.0", Style::default().fg(Color::DarkGray)),
-        Span::raw("  ·  "),
-        Span::styled("NixOS Garbage Collection Helper", Style::default().fg(Color::Gray)),
-    ]);
+    let inner = header_block.inner(chunks[0]);
+    f.render_widget(header_block, chunks[0]);
 
-    let header = Paragraph::new(header_text)
-        .block(header_block)
-        .alignment(Alignment::Left);
-    f.render_widget(header, chunks[0]);
+    let header_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(10),
+            Constraint::Length(12),
+        ])
+        .split(inner);
+
+    let left = Paragraph::new(Span::styled(
+        " rensa",
+        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+    ));
+    f.render_widget(left, header_layout[0]);
+
+    let right = Paragraph::new(Span::styled(
+        "v0.1.0 ",
+        Style::default().fg(Color::DarkGray),
+    ))
+    .alignment(Alignment::Right);
+    f.render_widget(right, header_layout[1]);
 
     // 2. Table of Targets
     let items_block = Block::default()
@@ -211,7 +223,18 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::DarkGray));
 
-    let header = Paragraph::new(Line::from(vec![
+    let inner = header_block.inner(chunks[0]);
+    f.render_widget(header_block, chunks[0]);
+
+    let header_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Min(10),
+            Constraint::Length(12),
+        ])
+        .split(inner);
+
+    let left = Paragraph::new(Line::from(vec![
         Span::styled(" rensa ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
         Span::raw("· "),
         Span::styled(
@@ -220,9 +243,15 @@ fn draw_exec_view(f: &mut Frame, app: &App, area: Rect) {
                 .fg(if app.mode == AppMode::Done { Color::Green } else { Color::Yellow })
                 .add_modifier(Modifier::BOLD),
         ),
-    ]))
-    .block(header_block);
-    f.render_widget(header, chunks[0]);
+    ]));
+    f.render_widget(left, header_layout[0]);
+
+    let right = Paragraph::new(Span::styled(
+        "v0.1.0 ",
+        Style::default().fg(Color::DarkGray),
+    ))
+    .alignment(Alignment::Right);
+    f.render_widget(right, header_layout[1]);
 
     // 2. Steps summary (Table layout)
     let steps_block = Block::default()
